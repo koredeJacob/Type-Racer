@@ -3,7 +3,7 @@ import socket from '../socket'
 
 import { Player } from './types'
 
-const StartButton=({player,gameID}:{player:any,gameID:number})=>{
+const StartButton=({player,gameID}:{player:Player,gameID:number})=>{
     const [showButton,setShowButton]=useState(true)
     const {isReferee}=player
 

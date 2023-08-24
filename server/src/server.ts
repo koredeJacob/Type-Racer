@@ -16,6 +16,25 @@ const io = new Server(server, { cors: { origin: '*', methods: ['GET', 'POST'] } 
 io.on('connection',(socket:any)=>{
     console.log('user connected...',socket.id)
 
+    socket.on('userInput',async({userinput,gameid}:{userinput:string,gameid:number})=>{
+        try {
+            const game=await prisma.game.findUnique({
+                where:{
+                    id:gameid
+                },
+                include:{
+                    players:true
+                }
+            })
+
+            if(!game?.isOpen && !game?.isOver){
+                
+            }
+        } catch (error) {
+            
+        }
+    })
+
     socket.on('create_game',async (nickname:string):Promise<void>=>{
         try{
             const quote:string[]|string=await getQuotes('https://api.quotable.io/quotes/random?maxLength=300&minLength=200')
@@ -128,13 +147,13 @@ io.on('connection',(socket:any)=>{
 })
 
 const startGameClock= async(gameId:number)=>{
-    const start=new Date()
+   
     const game=await prisma.game.update({
         where:{
             id:gameId
         },
         data:{
-            StartTime:start
+            StartTime:new Date()
         },
         include:{
             players:true
@@ -145,7 +164,7 @@ const startGameClock= async(gameId:number)=>{
     const timerID=setInterval(async()=>{
         if(time>=0){
             const formatTime=calculateTime(time)
-            io.to(gameId.toString()).emit('timer',{countDOwn:formatTime,msg:'time remaining'})
+            io.to(gameId.toString()).emit('timer',{countDown:formatTime,msg:'time remaining'})
             time-=1
         }
         else{
@@ -156,10 +175,11 @@ const startGameClock= async(gameId:number)=>{
                     GameId:gameId
                 }
             })
-            const newplayers=findPlayers.map((player,index)=>{
+            const newplayers=findPlayers.map(({id,GameId,...player},index)=>{
                 if(player.wpm===-1 && starttime){
                     player.wpm=calculatewpm(starttime.getTime(),endTime,player.currentWordIndex)
                 }
+    
                 return player
             })
             const deleteplayers=await prisma.player.deleteMany({
@@ -185,7 +205,7 @@ const startGameClock= async(gameId:number)=>{
             io.to(gameId.toString()).emit('updateGame',updateGame)
             clearInterval(timerID)
         }
-    })
+    },1000)
     
     const calculateTime=(time:number):string=>{
         const minutes:number=Math.floor(time/60)
@@ -196,7 +216,8 @@ const startGameClock= async(gameId:number)=>{
     const calculatewpm=(start:number,end:number,currentWordIndex:number):number=>{
         const diff=(end-start)/1000
         const minutes=diff/60
-        return Math.floor(minutes/currentWordIndex)
+        //return Math.floor(minutes/currentWordIndex)
+        return 6
     }
 }
 
