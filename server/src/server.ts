@@ -237,7 +237,7 @@ const startGameClock= async(gameId:number)=>{
             players:true
         }
     })
-    let time=12
+    let time=150
     
     const timerID=setInterval(async()=>{
         if(time>=0){
