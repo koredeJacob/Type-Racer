@@ -7,7 +7,7 @@ const LeaderBoard=()=>{
     useEffect(()=>{
         const Scores=async()=>{
             try{
-                const response=await fetch('http://localhost:3000/leaderboard')
+                const response=await fetch('/leaderboard')
                 const scores=await response.json()
                 setTable(scores)
             }
