@@ -1,9 +1,13 @@
-import {useState,useRef,useEffect,ChangeEvent}from 'react'
+import {useState,useRef,useEffect,ChangeEvent,FormEvent}from 'react'
 import socket from '../socket'
 
 const Form=({isOpen,isOver,gameId}:{isOpen:boolean,isOver:boolean,gameId:number})=>{
     const [userinput,setuserInput]=useState('')
     const textInput=useRef<HTMLInputElement>(null)
+
+    const handleSubmit=(e:FormEvent<HTMLFormElement>)=>{
+        e.preventDefault()
+    }
 
     const handleChange=(e:ChangeEvent<HTMLInputElement>)=>{
         const val:string=e.target.value
@@ -25,7 +29,7 @@ const Form=({isOpen,isOver,gameId}:{isOpen:boolean,isOver:boolean,gameId:number}
 
     return (
         <div className='w-[96%] mx-auto mt-5'>
-            <form>
+            <form onSubmit={handleSubmit}>
                 <input className="w-full mx-auto border-2 border-gray-400 rounded pl-2 py-1.5 outline-0" type='text' readOnly={isOpen || isOver} 
                 onChange={handleChange} value={userinput} ref={textInput}/>
             </form>
