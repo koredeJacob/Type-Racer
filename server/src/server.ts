@@ -1,5 +1,6 @@
-import express,{ Express} from "express"
+import express,{Express,Request,Response} from "express"
 import { Server } from "socket.io"
+import path from "path"
 
 import prisma from "./db/prisma"
 import { getQuotes } from './requests/quotesrequests'
@@ -13,25 +14,96 @@ const server=app.listen(3000,()=>{
 
 const io = new Server(server, { cors: { origin: '*', methods: ['GET', 'POST'] } })
 
+app.use((req:Request, res:Response, next) => {
+	res.set('Access-Control-Allow-Origin', 'http://127.0.0.1:5173')
+	next()
+})
+
+app.use(express.json())
+app.use(express.static(path.join(__dirname, '..', 'public')))
+
+app.get('/leaderboard',async (req:Request,res:Response)=>{
+    
+    const players=await prisma.player.findMany({
+        select:{
+            name:true,
+            wpm:true
+        },
+        orderBy:{
+            wpm:'desc'
+        }
+    })
+    if(!players){
+        return res.status(404).json({error:'user not found'})
+    }
+    return res.status(200).json(players)
+})
+
+app.get('/*', (req:Request, res:Response) => {
+	return res.sendFile(path.join(__dirname, '..', 'public', 'index.html'))
+})
+
 io.on('connection',(socket:any)=>{
     console.log('user connected...',socket.id)
-
-    socket.on('userInput',async({userinput,gameid}:{userinput:string,gameid:number})=>{
+    socket.on('userInput',async({userinput,gameId}:{userinput:string,gameId:number})=>{
         try {
             const game=await prisma.game.findUnique({
                 where:{
-                    id:gameid
+                    id:gameId
                 },
                 include:{
                     players:true
                 }
             })
 
-            if(!game?.isOpen && !game?.isOver){
-                
+            if(game && !game.isOpen && !game.isOver){
+                const player=game.players.find(player=>player.SocketID===socket.id)
+            
+                if (player){
+                    const word=game.Words[player.currentWordIndex]
+                    if (word===userinput){
+                        const updatedplayer= await prisma.player.update({
+                            where:{
+                                id:player.id
+                            },
+                            data:{
+                                currentWordIndex:{
+                                    increment:1
+                                }
+                            }
+                        })
+                        
+                        if (updatedplayer && updatedplayer.currentWordIndex===game.Words.length){
+                            const endTime=new Date().getTime()
+                            const {StartTime}=game
+                            if (StartTime){
+                                const wpm:number=calculatewpm(StartTime.getTime(),endTime,updatedplayer.currentWordIndex)
+                            
+                                const updateplayer=await prisma.player.update({
+                                    where:{
+                                        id:player.id
+                                    },
+                                    data:{
+                                        wpm:wpm
+                                    }
+                                })
+                            }
+                            socket.emit('done')
+                        }
+                        const gamelatest=await prisma.game.findUnique({
+                            where:{
+                                id:gameId
+                            },
+                            include:{
+                                players:true
+                            }
+                        })
+                        io.to(gameId.toString()).emit('updateGame',gamelatest)
+                    }
+                }
             }
         } catch (error) {
-            
+            console.log(error)
         }
     })
 
@@ -146,6 +218,12 @@ io.on('connection',(socket:any)=>{
 
 })
 
+const calculatewpm=(start:number,end:number,currentWordIndex:number):number=>{
+    const diff=(end-start)/1000
+    const minutes=diff/60
+    return Math.floor(currentWordIndex/minutes)
+}
+
 const startGameClock= async(gameId:number)=>{
    
     const game=await prisma.game.update({
@@ -211,13 +289,6 @@ const startGameClock= async(gameId:number)=>{
         const minutes:number=Math.floor(time/60)
         const seconds:number=time%60
         return `${minutes}:${seconds<10 ? '0'+seconds:seconds}`
-    }
-
-    const calculatewpm=(start:number,end:number,currentWordIndex:number):number=>{
-        const diff=(end-start)/1000
-        const minutes=diff/60
-        //return Math.floor(minutes/currentWordIndex)
-        return 6
     }
 }
 

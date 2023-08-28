@@ -1,9 +1,10 @@
-import React from 'react'
 import { redirect } from 'react-router-dom'
 
 import CountDown from './CountDown'
 import StartButton from './StartButton'
 import DisplayWords from './DisplayWords'
+import ProgressBar from './ProgressBar'
+import ScoreBoard from './ScoreBoard'
 import Form from './Form'
 import socket from '../socket'
 import { Player ,GameState} from './types'
@@ -22,12 +23,14 @@ const TypeRacer=({gameState}:{gameState:GameState})=>{
 
     return(
         <>  {player && 
-            <>
+            <div className='max-w-[640px] mx-auto mt-6'>
+                <ProgressBar players={players} player={player} wordsLength={Words.length}/>
                 <DisplayWords words={Words} player={player}/>
                 <Form isOpen={isOpen} isOver={isOver} gameId={id}/>
                 <CountDown/>
                 <StartButton player={player} gameID={id}/>
-            </>}
+                <ScoreBoard players={players}/>
+            </div>}
         </>
     )
 }

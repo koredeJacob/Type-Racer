@@ -1,4 +1,4 @@
-import React ,{useState,useRef,useEffect,ChangeEvent}from 'react'
+import {useState,useRef,useEffect,ChangeEvent}from 'react'
 import socket from '../socket'
 
 const Form=({isOpen,isOver,gameId}:{isOpen:boolean,isOver:boolean,gameId:number})=>{
@@ -24,9 +24,9 @@ const Form=({isOpen,isOver,gameId}:{isOpen:boolean,isOver:boolean,gameId:number}
     },[isOpen])
 
     return (
-        <div>
+        <div className='w-[96%] mx-auto mt-5'>
             <form>
-                <input type='text' readOnly={isOpen || isOver} 
+                <input className="w-full mx-auto border-2 border-gray-400 rounded pl-2 py-1.5 outline-0" type='text' readOnly={isOpen || isOver} 
                 onChange={handleChange} value={userinput} ref={textInput}/>
             </form>
         </div>

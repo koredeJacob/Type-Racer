@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import {Routes,Route,useNavigate} from "react-router-dom"
 
 import Home from "./pages/Homepage"
@@ -7,6 +7,7 @@ import JoinGame from "./components/JoinGame"
 import TypeRacer from "./components/TypeRacer"
 import { GameState } from "./components/types"
 import socket from "./socket"
+import LeaderBoard from "./components/Leaderboard"
 
 function App() {
   const [gameState,setgameState]=useState<GameState>({id:-1,Words:[],isOpen:false,players:[],isOver:false,StartTime:null})
@@ -33,8 +34,9 @@ function App() {
 				<Routes>
 					<Route path='/' element={<Home />} />
           <Route path="/game/create" element={<CreateGame/>}/>
-          <Route path="game/join" element={<JoinGame/>}/>
-          <Route path="game/:gameID" element={<TypeRacer gameState={gameState}/>}/>
+          <Route path="/game/join" element={<JoinGame/>}/>
+          <Route path="/game/:gameID" element={<TypeRacer gameState={gameState}/>}/>
+          <Route path="/leaderboard" element={<LeaderBoard/>}/>
 				</Routes>
       </div>
   )

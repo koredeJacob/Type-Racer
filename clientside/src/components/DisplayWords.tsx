@@ -1,14 +1,13 @@
-import React from 'react'
 import { Player } from './types'
 
 const getTypedWords=(words:string[],player:Player)=>{
     const typedwords:string[]=words.slice(0,player.currentWordIndex)
     const typedwordsstr:string=typedwords.join(' ')
-    return <span>{typedwordsstr} </span>
+    return <span className='text-green-600'>{typedwordsstr} </span>
 }
 
 const getCurrentWord=(words:string[],player:Player)=>{
-    return <span style={{textDecoration:'underline'}}>{words[player.currentWordIndex]} </span>
+    return <span className='underline underline-offset-4'>{words[player.currentWordIndex]} </span>
 }
 
 const getWordsToBeTyped=(words:string[],player:Player)=>{
@@ -19,7 +18,7 @@ const getWordsToBeTyped=(words:string[],player:Player)=>{
 
 const DisplayWords=({words,player}:{words:string[],player:Player})=>{
     return(
-        <div>
+        <div className='w-[96%] mt-7 mx-auto rounded-md p-4 text-gray-900 text-lg font-normal bg-gray-50'>
             {getTypedWords(words,player)}
             {getCurrentWord(words,player)}
             {getWordsToBeTyped(words,player)}

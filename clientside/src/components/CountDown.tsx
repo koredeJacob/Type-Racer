@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import socket from '../socket'
 
 const CountDown=()=>{
@@ -8,13 +8,16 @@ const CountDown=()=>{
         socket.on('timer',(data)=>{
             setTimer(data)
         })
+        socket.on('done',()=>{
+            socket.removeListener('timer')
+        })
     },[])
     const {countDown,msg}=timer
     return(
-        <>
-            <h1>{countDown}</h1>
-            <h3>{msg}</h3>
-        </>
+        <div className='text-center mt-5'>
+            <h1 className='text-3xl font-medium'>{countDown}</h1>
+            <h3 className='text-xl'>{msg}</h3>
+        </div>
     )
 }
 
