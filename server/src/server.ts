@@ -178,11 +178,6 @@ io.on('connection',(socket:any)=>{
 
     socket.on('timer',async({playerID,gameID}:{playerID:number,gameID:number})=>{
         let countDown=10
-        const game=await prisma.game.findUnique({
-            where:{
-                id:gameID
-            }
-        })
 
         const player=await prisma.player.findUnique({
             where:{
@@ -190,11 +185,11 @@ io.on('connection',(socket:any)=>{
             }
         })
 
-        if(player?.id){
+        if(player?.isReferee){
             const timerID=setInterval(async()=>{
                 if (countDown>=0){
                     io.to(gameID.toString()).emit('timer',{countDown,msg:'starting game'})
-                    countDown-=1
+                    countDown--
                 }
                 else{
                     const updateGame=await prisma.game.update({
@@ -208,9 +203,9 @@ io.on('connection',(socket:any)=>{
                             players:true
                         }
                     })
-                    clearInterval(timerID)
-                    io.to(gameID.toString()).emit('updateGame',updateGame)
+                    io.to(gameID.toString()).emit('updateGame',updateGame) 
                     startGameClock(gameID)
+                    clearInterval(timerID)   
                 }
             },1000)
         }
@@ -237,15 +232,16 @@ const startGameClock= async(gameId:number)=>{
             players:true
         }
     })
-    let time=150
+    let time=10
     
     const timerID=setInterval(async()=>{
         if(time>=0){
             const formatTime=calculateTime(time)
             io.to(gameId.toString()).emit('timer',{countDown:formatTime,msg:'time remaining'})
-            time-=1
+            time--
         }
         else{
+            
             const endTime=new Date().getTime()
             const starttime=game.StartTime
             const findPlayers=await prisma.player.findMany({
@@ -257,7 +253,7 @@ const startGameClock= async(gameId:number)=>{
                 if(player.wpm===-1 && starttime){
                     player.wpm=calculatewpm(starttime.getTime(),endTime,player.currentWordIndex)
                 }
-    
+        
                 return player
             })
             const deleteplayers=await prisma.player.deleteMany({
@@ -265,7 +261,7 @@ const startGameClock= async(gameId:number)=>{
                     GameId:gameId
                 }
             })
-
+        
             const updateGame=await prisma.game.update({
                 where:{
                     id:gameId
@@ -280,16 +276,16 @@ const startGameClock= async(gameId:number)=>{
                     players:true
                 }
             })
+           
             io.to(gameId.toString()).emit('updateGame',updateGame)
-            clearInterval(timerID)
-        }
-    },1000)
-    
-    const calculateTime=(time:number):string=>{
-        const minutes:number=Math.floor(time/60)
-        const seconds:number=time%60
-        return `${minutes}:${seconds<10 ? '0'+seconds:seconds}`
-    }
+            clearInterval(timerID)     
+        }},1000)
+}
+
+ const calculateTime=(time:number):string=>{
+    const minutes:number=Math.floor(time/60)
+    const seconds:number=time%60
+    return `${minutes}:${seconds<10 ? '0'+seconds:seconds}`
 }
 
 
