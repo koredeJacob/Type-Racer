@@ -192,6 +192,7 @@ io.on('connection',(socket:any)=>{
                     countDown--
                 }
                 else{
+                    clearInterval(timerID)   
                     const updateGame=await prisma.game.update({
                         where:{
                             id:gameID
@@ -205,7 +206,7 @@ io.on('connection',(socket:any)=>{
                     })
                     io.to(gameID.toString()).emit('updateGame',updateGame) 
                     startGameClock(gameID)
-                    clearInterval(timerID)   
+
                 }
             },1000)
         }
@@ -232,7 +233,7 @@ const startGameClock= async(gameId:number)=>{
             players:true
         }
     })
-    let time=10
+    let time=150
     
     const timerID=setInterval(async()=>{
         if(time>=0){
@@ -241,7 +242,7 @@ const startGameClock= async(gameId:number)=>{
             time--
         }
         else{
-            
+            clearInterval(timerID) 
             const endTime=new Date().getTime()
             const starttime=game.StartTime
             const findPlayers=await prisma.player.findMany({
@@ -278,7 +279,7 @@ const startGameClock= async(gameId:number)=>{
             })
            
             io.to(gameId.toString()).emit('updateGame',updateGame)
-            clearInterval(timerID)     
+                
         }},1000)
 }
 
